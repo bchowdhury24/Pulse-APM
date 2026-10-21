@@ -101,7 +101,9 @@ flowchart TB
             MYSQL[("MySQL :3306")]
             REDIS[("Redis :6379")]
             MONGO[("MongoDB :27017")]
-            EXP1 -.TCP Handshake Probes.-> MYSQL & REDIS & MONGO
+            EXP1 -.->|TCP Handshake Probes| MYSQL
+            EXP1 -.->|TCP Handshake Probes| REDIS
+            EXP1 -.->|TCP Handshake Probes| MONGO
         end
 
         subgraph Target2["Target Host 2: Node.js API Cluster"]
@@ -109,14 +111,15 @@ flowchart TB
             NGINX_REV["NGINX Reverse Proxy<br/>(access.log w/ $request_time)"]
             NODE_A["Node API Cluster A (:3000)"]
             NODE_B["Node API Cluster B (:3001)"]
-            NGINX_REV --> NODE_A & NODE_B
-            EXP2 -.Tail & Regex Parse.-> NGINX_REV
+            NGINX_REV --> NODE_A
+            NGINX_REV --> NODE_B
+            EXP2 -.->|Tail & Regex Parse| NGINX_REV
         end
 
         subgraph Target3["Target Host 3: Web / Admin Ingress"]
             EXP3["pulse Exporter Daemon<br/>(Bash / Python 3)"]
             PHP_WEB["PHP-FPM / Admin Panel (:80)"]
-            EXP3 -.Tail & Health Probe.-> PHP_WEB
+            EXP3 -.->|Tail & Health Probe| PHP_WEB
         end
     end
 
@@ -140,17 +143,19 @@ flowchart TB
         HOST_VITALS["Host Metrics & Sparklines<br/>(CPU, RAM, Disk, Load)"]
     end
 
-    EXP1 --"Outbound POST /api/ingest (every 3s)"--> INGEST_GW
-    EXP2 --"Outbound POST /api/ingest (every 3s)"--> INGEST_GW
-    EXP3 --"Outbound POST /api/ingest (every 3s)"--> INGEST_GW
+    EXP1 -->|Outbound POST /api/ingest| INGEST_GW
+    EXP2 -->|Outbound POST /api/ingest| INGEST_GW
+    EXP3 -->|Outbound POST /api/ingest| INGEST_GW
 
     INGEST_GW --> DB_HOT
     INGEST_GW --> WS_SERVER
-    LIVENESS -.Check Host Timestamps.-> DB_HOT
-    LIVENESS -.On Timeout Emit Offline.-> WS_SERVER
-    ROLLUP -.Downsample Frames > Retention.-> DB_ROLLUP
+    LIVENESS -.->|Check Host Timestamps| DB_HOT
+    LIVENESS -.->|On Timeout Emit Offline| WS_SERVER
+    ROLLUP -.->|Downsample Frames| DB_ROLLUP
 
-    WS_SERVER ==="Live Stream Diff (Push)"===> FLOW_MAP & REQ_STREAM & HOST_VITALS
+    WS_SERVER -->|Live Stream Diff| FLOW_MAP
+    WS_SERVER -->|Live Stream Diff| REQ_STREAM
+    WS_SERVER -->|Live Stream Diff| HOST_VITALS
 ```
 
 ---
@@ -392,7 +397,8 @@ flowchart TD
             NX["NGINX Proxy (:80/:443)"]
             A1["Express API Instance 1 (:3000)"]
             A2["Express API Instance 2 (:3001)"]
-            NX --> A1 & A2
+            NX --> A1
+            NX --> A2
         end
 
         subgraph Srv3["Server 3: Web / Admin Host (srv-admin-01)"]
@@ -410,12 +416,12 @@ flowchart TD
         NGX_CENTRAL -->|Route / | STATIC_BUNDLE
         NGX_CENTRAL -->|Proxy /api/ | NODE_BACKEND
         NGX_CENTRAL -->|Tunnel /ws | NODE_BACKEND
-        NODE_BACKEND <--> SQLITE_DB
+        NODE_BACKEND --- SQLITE_DB
     end
 
-    E1 --"Outbound HTTPS POST /api/ingest"--> NGX_CENTRAL
-    E2 --"Outbound HTTPS POST /api/ingest"--> NGX_CENTRAL
-    E3 --"Outbound HTTPS POST /api/ingest"--> NGX_CENTRAL
+    E1 -->|Outbound HTTPS POST /api/ingest| NGX_CENTRAL
+    E2 -->|Outbound HTTPS POST /api/ingest| NGX_CENTRAL
+    E3 -->|Outbound HTTPS POST /api/ingest| NGX_CENTRAL
 ```
 
 ---

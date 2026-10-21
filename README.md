@@ -1,592 +1,465 @@
+# 🎥 Real-Time Live Streaming & Social Commerce Platform
+
 <div align="center">
 
-# ⚡ PULSE - APM
+### End-to-End Engineering Case Study: High-Throughput Live Video, Real-Time Fanout, and Financial-Grade Virtual Economy
 
-### Enterprise Observability for Modern Infrastructure
-
-*Real-Time Application Flow Map, Distributed Telemetry Ingestion, and Production Observability Platform*
-
-[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![React Flow](https://img.shields.io/badge/React_Flow-xyflow-FF0072?style=flat-square)](https://reactflow.dev/)
-[![SQLite](https://img.shields.io/badge/SQLite-WAL_Engine-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![WebSockets](https://img.shields.io/badge/WebSockets-ws-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://github.com/websockets/ws)
-[![NGINX](https://img.shields.io/badge/NGINX-Reverse_Proxy-009639?style=flat-square&logo=nginx&logoColor=white)](https://nginx.org/)
-[![PM2](https://img.shields.io/badge/PM2-Cluster_Mode-2B037A?style=flat-square&logo=pm2&logoColor=white)](https://pm2.keymetrics.io/)
-[![License](https://img.shields.io/badge/License-Proprietary_Case_Study-blue?style=flat-square)](#-confidentiality--portfolio-notice)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-ACID_Ledger-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Document_Logs-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Redis](https://img.shields.io/badge/Redis-Cache_+_Locks-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
+[![Bull](https://img.shields.io/badge/Bull-Message_Queues-orange?style=flat-square)](https://optimalbits.github.io/bull/)
+[![AWS](https://img.shields.io/badge/AWS-SQS_·_S3_·_X--Ray_·_CodeDeploy-232F3E?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com/)
+[![Agora](https://img.shields.io/badge/Agora-RTC_·_RTM-099DFD?style=flat-square)](https://www.agora.io/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-Real--Time_Signaling-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?style=flat-square&logo=prometheus&logoColor=white)](https://prometheus.io/)
 
 </div>
 
 > [!NOTE]
 > **Confidentiality & Engineering Portfolio Notice**  
-> This repository serves as an architectural case study and technical reference implementation of **pulse APM**. It demonstrates production-tested patterns for distributed systems observability, zero-code telemetry extraction, real-time graph visualization, and high-throughput ingestion. Proprietary customer datasets, internal infrastructure IP addresses, production security certificates, and commercial licensing secrets are omitted in accordance with security best practices.
+> This repository is a technical case study detailing the architectural design, engineering trade-offs, and production operations of a commercial live-streaming platform. Proprietary source code, production credentials, internal IP addresses, secret keys, and confidential business logic are strictly omitted in compliance with non-disclosure obligations. All architectural diagrams and system workflows represent sanitized, production-verified designs.
 
 ---
 
 ## 📑 Table of Contents
 
-1. [Executive Summary & Problem Space](#-executive-summary--problem-space)
-2. [Engineering Ownership & Technical Scope](#-engineering-ownership--technical-scope)
-3. [System Architecture & Data Flow](#-system-architecture--data-flow)
-   - [High-Level Distributed Architecture](#1-high-level-distributed-architecture)
-   - [Telemetry Ingestion & Broadcast Pipeline](#2-telemetry-ingestion--broadcast-pipeline)
-   - [Tiered Storage & Lifecycle Compaction](#3-tiered-storage--lifecycle-compaction)
-4. [Core Platform Capabilities](#-core-platform-capabilities)
-   - [Dynamic Application Flow Map](#1-dynamic-application-flow-map)
-   - [Real-Time Distributed Request Stream](#2-real-time-distributed-request-stream)
-   - [Host Infrastructure & Vitals Telemetry](#3-host-infrastructure--vitals-telemetry)
-   - [Automated Root-Cause Isolation](#4-automated-root-cause-isolation)
-5. [Deep-Dive Engineering Challenges & Solutions](#-deep-dive-engineering-challenges--solutions)
-   - [Zero-Code vs. In-Process Telemetry Ingestion](#challenge-1-zero-code-vs-in-process-telemetry-ingestion)
-   - [Real-Time 60 FPS Graph Layout & Metric Edge Animation](#challenge-2-real-time-60-fps-graph-layout--metric-edge-animation)
-   - [High-Throughput Ingestion with SQLite WAL & Automated Compaction](#challenge-3-high-throughput-ingestion-with-sqlite-wal--automated-compaction)
-   - [Cascading Failure Detection & Heartbeat Liveness Engine](#challenge-4-cascading-failure-detection--heartbeat-liveness-engine)
-   - [Constant-Time Cryptographic Auth & Multi-Tenant Isolation](#challenge-5-constant-time-cryptographic-auth--multi-tenant-isolation)
-6. [Technology Stack & Decision Matrix](#-technology-stack--decision-matrix)
-7. [Production Deployment & Infrastructure Topology](#-production-deployment--infrastructure-topology)
-   - [Target Infrastructure Architecture (3-Server Fleet)](#1-target-infrastructure-architecture-3-server-fleet)
-   - [Central Portal Deployment (NGINX + PM2)](#2-central-portal-deployment-nginx--pm2)
-   - [Zero-Inbound Security Model](#3-zero-inbound-security-model)
-8. [Reliability, SLA Benchmarks & Failure Modes](#-reliability-sla-benchmarks--failure-modes)
-9. [Key Engineering Takeaways & Lessons Learned](#-key-engineering-takeaways--lessons-learned)
-10. [Future Architectural Roadmap](#-future-architectural-roadmap)
-11. [Author & Technical Profile](#-author--technical-profile)
+1. [Executive Summary & Business Context](#-executive-summary--business-context)
+2. [Engineering Ownership & My Role](#-engineering-ownership--my-role)
+3. [System Context & External Integrations](#-system-context--external-integrations)
+4. [Platform Capability Map](#-platform-capability-map)
+5. [System Architecture & Logical Design](#-system-architecture--logical-design)
+   - [Modular Monolith & Layered Plane Separation](#1-modular-monolith--layered-plane-separation)
+   - [Real-Time Fanout & Presence Architecture](#2-real-time-fanout--presence-architecture)
+6. [Deep-Dive Engineering Challenges & Solutions](#-deep-dive-engineering-challenges--solutions)
+   - [Challenge 1: High-Concurrency Virtual Gifting & Financial Ledger](#challenge-1-high-concurrency-virtual-gifting--financial-ledger)
+   - [Challenge 2: Sub-Second Interactive Video Transport & Signaling](#challenge-2-sub-second-interactive-video-transport--signaling)
+   - [Challenge 3: High-Velocity Leaderboards & Hot-Key Caching](#challenge-3-high-velocity-leaderboards--hot-key-caching)
+   - [Challenge 4: Asynchronous Resilience & Data Reconciliation](#challenge-4-asynchronous-resilience--data-reconciliation)
+   - [Challenge 5: Zero-Downtime Multi-Core Deployment on AWS](#challenge-5-zero-downtime-multi-core-deployment-on-aws)
+7. [The Virtual Gifting Pipeline (Sequence Deep-Dive)](#-the-virtual-gifting-pipeline-sequence-deep-dive)
+8. [Technology Stack & Decision Matrix](#-technology-stack--decision-matrix)
+9. [Observability & Production Operations](#-observability--production-operations)
+10. [Measurable Scale, Performance & Business Impact](#-measurable-scale-performance--business-impact)
+11. [Engineering Trade-Offs & Lessons Learned](#-engineering-trade-offs--lessons-learned)
+12. [Future Architectural Roadmap](#-future-architectural-roadmap)
+13. [Author & Technical Leadership](#-author--technical-leadership)
 
 ---
 
-## 🧭 Executive Summary & Problem Space
+## 🧭 Executive Summary & Business Context
 
-Modern enterprise architectures span heterogeneous environments: legacy PHP monolithic portals, containerized Node.js microservice clusters, distributed memory caches (Redis), and polyglot persistence tiers (MySQL, MongoDB). In high-throughput, multi-server production environments, engineering teams face three fundamental observability hurdles:
+Interactive live streaming sits at the intersection of ultra-low latency media transport and high-velocity financial transactions. Creators broadcast live video feeds to tens of thousands of concurrent viewers who interact through real-time chat, streamer-vs-streamer (PK) battles, and **virtual gifts purchased with real fiat currency**.
 
-1. **Intrusive Agent Overhead:** Traditional commercial APM tools (e.g., Datadog, New Relic, Dynatrace) often require heavy runtime byte-code manipulation or extensive SDK instrumentation that injects latency, consumes significant host memory, and carries vendor lock-in.
-2. **Network Perimeter Constraints:** Security-conscious production networks prohibit opening inbound firewall ports on client database and application nodes to external monitoring collectors.
-3. **Cognitive Overload During Outages:** When an upstream dependency fails (e.g., a connection pool exhaustion on a primary MySQL database), downstream microservices emit hundreds of cascading error alerts. Without topological awareness, on-call engineers waste critical minutes identifying which node was the initial point of failure.
+Operating this platform presents four conflicting engineering requirements:
+1. **Strict Latency Budget (< 1000 ms):** Video streams, chat comments, and gift visual triggers must arrive synchronously. A gift animation arriving 2 seconds after the viewer clicked "Send" destroys the interactive illusion.
+2. **Zero-Tolerance Financial Consistency:** Virtual currency balances and transactions represent real revenue. Double-spending, balance discrepancies, or dropped purchases represent legal compliance failures and direct financial loss.
+3. **Severe Traffic Spikiness:** A popular creator initiating an unscheduled broadcast causes viewer concurrency and inbound request volume to spike by up to $50\times$ within 90 seconds.
+4. **Operational Resilience:** An unexpected backend failure during a top creator's live broadcast disrupts thousands of paying viewers, creating immediate reputational and revenue damage.
 
-### The Solution: pulse APM
+### High-Level System Profile
 
-**pulse APM** is an on-premises, lightweight, real-time Application Performance Monitoring platform engineered to deliver instant topological clarity and distributed telemetry across multi-tier production fleets:
-
-- **Zero-Code Agent Extraction:** Employs lightweight, standalone daemon exporters that passively tail reverse-proxy access logs (NGINX/Apache) and probe TCP/HTTP sockets with **zero modifications** to target application source code.
-- **Strict Outbound-Only Telemetry:** Monitored hosts push heartbeats and transactional metrics via outbound HTTPS POST requests to the central portal—requiring **zero inbound firewall rules**.
-- **Real-Time Interactive Topology:** Renders a reactive, 60 FPS **Application Flow Map** displaying live call paths, throughput (RPM), average response latency (ms), and error percentages with color-coded SLA degradation boundaries.
-- **Cascading Failure Isolation:** Correlates service dependencies in real time; if a database crashes, only that specific node and its immediate callers transition to critical status, pinpointing root cause instantly.
-
----
-
-## 👤 Engineering Ownership & Technical Scope
-
-As the Principal System Architect and Lead Engineer on this initiative, I took end-to-end technical ownership spanning architecture, implementation, benchmarking, and operational deployment:
-
-| Engineering Domain | Scope of Ownership & Architectural Decisions |
+| Dimension | Production Metric / Characteristic |
 |---|---|
-| **System Architecture** | Designed the distributed client-server telemetry protocol, schema data models, decoupled tier layouts, and event-driven WebSocket fanout pipeline. |
-| **Backend & Storage Engine** | Built the Node.js ingestion gateway, SQLite WAL persistence layer, automated rolling window data compactor, and constant-time cryptographic authentication module. |
-| **Exporter & Agent Systems** | Authored the standalone zero-dependency Python 3 and Bash exporter daemons, log-tailing regex engines, and protocol-level TCP/HTTP health probes. |
-| **Frontend & Topology UI** | Engineered the React 19 dashboard utilizing `@xyflow/react` for custom DAG tier rendering, dynamic SVG sparklines, and synchronized live request inspection drawers. |
-| **Production Operations** | Formulated NGINX reverse-proxy WebSocket upgrade configurations, PM2 cluster daemonization, systemd unit templates, and automated crash recovery workflows. |
+| **Domain** | Interactive Live Video · Social Commerce · Virtual Gifting Economy |
+| **Architectural Style** | Modular Monolith + Asynchronous Workers + Polyglot Persistence |
+| **API Surface** | 50+ Controllers across 5 Route Groups (`/auth`, `/api`, `/payment`, `/game`, `/public`, `/webview`) |
+| **Real-Time Transport** | Agora RTC / RTM, Socket.IO, Redis Pub/Sub |
+| **Persistence Tier** | MySQL (ACID Ledger), MongoDB (Unstructured Logs), Redis (Cache & Redlock) |
+| **Cloud Infrastructure** | AWS (EC2, S3, SQS, CodeDeploy, X-Ray), Firebase Cloud Messaging |
+| **Commercial Scale** | **$20M+ cumulative revenue** processed across platforms, **100,000+ Monthly Active Users (MAU)** |
 
 ---
 
-## 🏛️ System Architecture & Data Flow
+## 👤 Engineering Ownership & My Role
 
-### 1. High-Level Distributed Architecture
+As the Principal / Lead Backend Architect, I had end-to-end technical ownership for the backend system architecture, transactional integrity, and production cloud operations:
 
-The platform separates the **Monitored Fleet Plane** from the **Central APM Processing Plane**. Monitored nodes across arbitrary VPCs or physical datacenters communicate exclusively outbound over TLS.
-
-```mermaid
-flowchart TB
-    subgraph MonitoredFleet["Monitored Fleet Plane (Zero Inbound Open Ports)"]
-        subgraph Target1["Target Host 1: Data & Cache Tier"]
-            EXP1["pulse Exporter Daemon<br/>(Python 3 / systemd)"]
-            MYSQL[("MySQL :3306")]
-            REDIS[("Redis :6379")]
-            MONGO[("MongoDB :27017")]
-            EXP1 -.TCP Handshake Probes.-> MYSQL & REDIS & MONGO
-        end
-
-        subgraph Target2["Target Host 2: Node.js API Cluster"]
-            EXP2["pulse Exporter Daemon<br/>(Python 3 / systemd)"]
-            NGINX_REV["NGINX Reverse Proxy<br/>(access.log w/ $request_time)"]
-            NODE_A["Node API Cluster A (:3000)"]
-            NODE_B["Node API Cluster B (:3001)"]
-            NGINX_REV --> NODE_A & NODE_B
-            EXP2 -.Tail & Regex Parse.-> NGINX_REV
-        end
-
-        subgraph Target3["Target Host 3: Web / Admin Ingress"]
-            EXP3["pulse Exporter Daemon<br/>(Bash / Python 3)"]
-            PHP_WEB["PHP-FPM / Admin Panel (:80)"]
-            EXP3 -.Tail & Health Probe.-> PHP_WEB
-        end
-    end
-
-    subgraph CentralPlane["Central APM Server Plane (Port 4000 / NGINX :443)"]
-        INGEST_GW["Ingest Gateway & Auth<br/>(POST /api/ingest)"]
-        LIVENESS["Liveness Monitor<br/>(12s Heartbeat Timeout)"]
-        ROLLUP["Hourly Rollup Worker<br/>(Archival Compactor)"]
-        
-        subgraph Persistence["Storage Tier (WAL Mode)"]
-            DB_HOT[("telemetry_frames<br/>(Raw Millisecond Frames)")]
-            DB_ROLLUP[("telemetry_hourly<br/>(Long-Term Aggregates)")]
-            DB_SEC[("users & sessions<br/>(scrypt + Salt Auth)")]
-        end
-
-        WS_SERVER["WebSocket Broadcast Server<br/>(/ws Channel)"]
-    end
-
-    subgraph PresentationPlane["Operator Presentation Plane (React 19)"]
-        FLOW_MAP["Interactive Flow Map<br/>(@xyflow/react)"]
-        REQ_STREAM["Live Request Stream Log<br/>(Inspection Drawer)"]
-        HOST_VITALS["Host Metrics & Sparklines<br/>(CPU, RAM, Disk, Load)"]
-    end
-
-    EXP1 --"Outbound POST /api/ingest (every 3s)"--> INGEST_GW
-    EXP2 --"Outbound POST /api/ingest (every 3s)"--> INGEST_GW
-    EXP3 --"Outbound POST /api/ingest (every 3s)"--> INGEST_GW
-
-    INGEST_GW --> DB_HOT
-    INGEST_GW --> WS_SERVER
-    LIVENESS -.Check Host Timestamps.-> DB_HOT
-    LIVENESS -.On Timeout Emit Offline.-> WS_SERVER
-    ROLLUP -.Downsample Frames > Retention.-> DB_ROLLUP
-
-    WS_SERVER ==="Live Stream Diff (Push)"===> FLOW_MAP & REQ_STREAM & HOST_VITALS
-```
+- **Distributed Architecture & Boundary Design:** Architected the modular monolith service boundaries, asynchronous queue pipelines, and multi-tier polyglot persistence schema.
+- **Financial Transaction Engine:** Designed and implemented the atomic virtual gifting pipeline, wallet ledger, distributed locking mechanisms, and idempotent payout systems.
+- **Real-Time Integration & Signaling:** Integrated Agora RTC/RTM for WebRTC-class video ingest and distribution, orchestrated Socket.IO room fanout, and configured Redis Pub/Sub message buses.
+- **Reliability & Data Reconciliation:** Engineered automated background reconciliation daemons to identify and resolve edge-case state drift between in-memory caches and the relational ledger.
+- **AWS Infrastructure & Zero-Downtime Deployment:** Structured the multi-core PM2 cluster orchestration, automated AWS CodeDeploy blue/green deployment hooks, and configured AWS X-Ray tracing.
 
 ---
 
-### 2. Telemetry Ingestion & Broadcast Pipeline
+## 🌐 System Context & External Integrations
 
-Telemetry is collected in decoupled 3-second frames. The sequence diagram below traces an end-to-end telemetry cycle from local OS probe execution through database write and browser graph update:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Host as Target Host (Exporter)
-    participant Nginx as Portal NGINX (:443)
-    participant NodeAPI as Central Node.js Server (:4000)
-    participant SQLite as SQLite WAL (pulse.db)
-    participant WS as WebSocket Hub (/ws)
-    participant Client as React Dashboard (Browser)
-
-    Note over Host: Every 3s: Read /proc/stat, free -m, df, tail NGINX log
-    Host->>Nginx: POST /api/ingest (Bearer Token + JSON Payload)
-    Nginx->>NodeAPI: Proxy Pass to 127.0.0.1:4000
-    NodeAPI->>NodeAPI: Validate Host Token & Project Identifier
-    
-    par Persistence Path (Atomic WAL Write)
-        NodeAPI->>SQLite: INSERT INTO telemetry_frames (metrics, services, requests)
-        SQLite-->>NodeAPI: Acknowledged (Sync: NORMAL)
-    and Real-Time Fanout Path
-        NodeAPI->>NodeAPI: Recalculate Node Health & SLA Thresholds
-        NodeAPI->>WS: Broadcast nextState payload to connected subscribers
-        WS-->>Client: Send JSON Frame via WebSocket
-    end
-
-    NodeAPI-->>Nginx: 200 OK {"status": "ok", "received": true}
-    Nginx-->>Host: 200 OK
-    Note over Client: Re-render Edge Metrics & Service Node Health Dots (60 FPS)
-```
-
----
-
-### 3. Tiered Storage & Lifecycle Compaction
-
-To ensure long-term sustainability on constrained disk footprints, the persistence engine implements an **automated rolling downsampling architecture**:
+The platform acts as the central coordinator between client mobile devices, low-latency media transport providers, payment processors, and notification systems:
 
 ```mermaid
 flowchart LR
-    RAW["Raw Telemetry Frames<br/>(Recorded Every 3s)<br/>Retention: Configurable N-Days"]
-    WORKER{{"Hourly Rollup Worker<br/>(Scheduled Interval)"}}
-    COMPACTED[("telemetry_hourly<br/>• samples count<br/>• cpu_avg & cpu_max<br/>• ram_avg & ram_max<br/>• disk_avg & disk_max<br/>• load_avg")]
-    CSV["Export Engine<br/>(CSV / JSON Historical APIs)"]
+    subgraph Clients["Client Ecosystem"]
+        M[📱 Mobile iOS / Android App]
+        W[🌐 WebView / Admin Portal]
+        GP_P[🎮 External Game Provider]
+    end
 
-    RAW -->|Elapsed Retention Cutoff| WORKER
-    WORKER -->|SQL Window Aggregation| COMPACTED
-    WORKER -->|Atomic Pruning| RAW
-    COMPACTED --> CSV
+    subgraph Platform["Hivo Core Platform"]
+        API[Express API Cluster<br/>PM2 Multi-Core]
+        WORKERS[Asynchronous Workers<br/>Bull / Redis Queues]
+    end
+
+    subgraph External["External Infrastructure & Edge"]
+        AG[Agora RTC / RTM<br/>Global Media Network]
+        FCM[Firebase Cloud Messaging<br/>Push Notifications]
+        GPAY[Google Play Billing<br/>In-App Purchases]
+        YT[YouTube Data API]
+        S3[AWS S3<br/>Media & Assets]
+    end
+
+    M -->|HTTPS / REST + JWT| API
+    W -->|HTTPS / Admin Auth| API
+    GP_P -->|Signed Webhooks| API
+
+    M <-->|Sub-Second WebRTC Video / Audio| AG
+    API -->|Dynamic Token Minting| AG
+    API -->|Async Push Notifications| FCM
+    API -->|Server-to-Server Purchase Validation| GPAY
+    API -->|Metadata / Video Queries| YT
+    API -->|Pre-Signed Uploads| S3
+    
+    API <-->|Job Dispatch & State| WORKERS
 ```
-
-- **Hot Tier (`telemetry_frames`):** Retains raw high-fidelity telemetry frames containing discrete HTTP request transactions, per-service response latencies, and machine vitals.
-- **Cold Tier (`telemetry_hourly`):** Every hour, a background job aggregates records older than `RAW_RETENTION_DAYS` into a single hourly row per host, recording mean and peak metrics (`cpu_avg`, `cpu_max`, `ram_avg`, `ram_max`, `disk_avg`, `disk_max`, `load_avg`).
-- **Disk Footprint Stability:** Raw frames are automatically pruned, keeping database sizes predictable and preventing unbounded B-Tree fragmentation in SQLite.
 
 ---
 
-## 🎯 Core Platform Capabilities
+## 🗺️ Platform Capability Map
 
-### 1. Dynamic Application Flow Map
-- **Tiered Topological Auto-Layout:** Services are mapped into strict architectural tiers:
-  $$\text{Client} \longrightarrow \text{Edge / Load Balancer} \longrightarrow \text{Web / Ingress} \longrightarrow \text{Application Cluster} \longrightarrow \text{Queue / Worker} \longrightarrow \text{Data / Storage} \longrightarrow \text{External}$$
-- **Live Animated Metric Edges:** Call paths dynamically animate and display real-time call throughput (RPM), average response latency (ms), and call failure percentages.
-- **Multi-State Node Visualizer:** Nodes dynamically shift border colors, badges, and status pills across **Healthy (Green)**, **Warning / High Load (Yellow)**, **Critical Failure (Red)**, and **No Data / Disconnected (Gray)**.
+The application logic is organized into six cohesive domain capabilities:
 
-### 2. Real-Time Distributed Request Stream
-- **Live Transaction Tail:** Streams incoming HTTP transactions row-by-row with sub-second latency directly into an interactive inspector table.
-- **Granular Attribute Attribution:** Displays HTTP method (`GET`, `POST`, `PUT`, `DELETE`), status code pill (`200 OK`, `401 Unauthorized`, `500 Internal Error`), route path, target service, millisecond latency, and client IP address.
-- **Deep Inspection Drawer:** Clicking any transaction reveals complete header payloads, URL query parameters, and JSON payloads.
-- **Topological Cross-Navigation:** Operators can click any node on the Flow Map and select *"View Live Request Stream"*, instantly deep-linking to the transaction table filtered strictly for that service.
+```
++---------------------------------------------------------------------------------------------------------+
+|                                         PLATFORM CAPABILITY MAP                                         |
++------------------------------------+------------------------------------+-------------------------------+
+| 🎬 LIVE STREAMING & BROADCAST      | ⚔️ PK BATTLES & COMPETITIONS       | 💎 VIRTUAL ECONOMY & WALLET   |
+| • Public, private, & VIP rooms     | • Streamer vs Streamer matching    | • Virtual gifts & animations  |
+| • Host broadcast lifecycle mgmt    | • Real-time dual scoring engine    | • Lucky gifts (RTP reserve)   |
+| • Participant roles & moderation   | • Micro-second score aggregation   | • Backpack inventory & store  |
+| • Dynamic Agora RTC token issuance | • Dynamic battle leaderboards      | • Double-entry wallet ledger  |
+| • Home explore & recommendation    | • Penalty & victory countdowns     | • Google Play IAP validation  |
++------------------------------------+------------------------------------+-------------------------------+
+| 👥 SOCIAL & RELATIONSHIPS          | 🏆 GAMIFICATION & ENGAGEMENT       | 🛠️ PLATFORM & FOUNDATION      |
+| • Mutual follower & friend graph   | • Daily, monthly, lifetime boards  | • Multi-tier JWT token gating |
+| • Real-time direct & room chat     | • User experience & tier levels    | • App version gating & config |
+| • Couples (CP) relationship spaces | • VIP / SVIP subscriber badges     | • Dynamic image compression   |
+| • Push notification pipelines      | • Achievement & quest engine       | • Distributed logging & audit |
+| • User reporting & help center     | • Daily check-in streak rewards    | • Active cache synchronization|
++------------------------------------+------------------------------------+-------------------------------+
+```
 
-### 3. Host Infrastructure & Vitals Telemetry
-- **Host Fleet Overview:** Side-by-side infrastructure cards displaying real-time CPU utilization, RAM consumption, disk storage occupancy, and Unix system load averages ($1$, $5$, $15$-minute windows).
-- **Embedded SVG Sparklines:** Renders in-memory SVG trendlines illustrating metric velocity over rolling timeframes without triggering heavy DOM re-renders.
-- **Exporter Fleet Directory:** Live inventory of all enrolled target hosts, displaying private IP addresses, operating system distributions, agent runtime versions, and last heartbeat timestamps.
+---
 
-### 4. Automated Root-Cause Isolation
-- **Multi-Dimensional SLA Rules:** Continuously evaluates telemetry against predefined threshold gates:
-  - **Error Rate:** Warning at $\ge 2.0\%$, Critical at $\ge 5.0\%$
-  - **Response Latency:** Warning at $\ge 400\text{ ms}$, Critical at $\ge 800\text{ ms}$
-  - **CPU Utilization:** Warning at $\ge 75\%$, Critical at $\ge 90\%$
-  - **Memory Utilization:** Warning at $\ge 85\%$, Critical at $\ge 95\%$
-- **Automatic 12-Second Liveness Timeout:** If an exporter misses heartbeats for $> 12\text{ seconds}$, the central engine automatically flags the host as **Offline**, transitions all hosted services to **No Data**, and fires an alert into the real-time incident event log.
+## 🏛️ System Architecture & Logical Design
+
+### 1. Modular Monolith & Layered Plane Separation
+
+The platform utilizes a **Modular Monolith architecture with Asynchronous Workers**. This design delivers the operational simplicity and shared-memory efficiencies of a single deployable unit while cleanly isolating the synchronous HTTP request path from heavy background jobs:
+
+```mermaid
+flowchart TB
+    LB["AWS Application Load Balancer / TLS Termination"]
+
+    subgraph AppNode["Application Node (PM2 Cluster: Instances = Max CPU)"]
+        direction TB
+        MW["Middleware Chain<br/>Compression → Prometheus → Morgan → App-Version Gating → JWT Auth → Sanitization"]
+        ROUTERS["Route Groups (50+ Controllers)<br/>/auth · /api · /payment · /game · /public · /webview"]
+        CONTROLLERS["Domain Controllers<br/>Broadcast · PK · Gifts · Wallet · Leaderboard · Feed · Social"]
+        LIB["Core Library & Domain Services<br/>Redlock Helper · Achievement Engine · Query Builder · Redis Cache Manager"]
+        MW --> ROUTERS --> CONTROLLERS --> LIB
+    end
+
+    subgraph AsyncPlane["Asynchronous Processing Plane"]
+        direction TB
+        GQ[("giftQueue<br/>(Bull / Redis)")]
+        RQ[("rtmQueue<br/>(Bull / Redis)")]
+        GW["giftWorker Daemon"]
+        RW["rtmWorker Daemon"]
+        BB["Bull Board<br/>(/queues UI)"]
+        GQ --> GW
+        RQ --> RW
+        BB -.Monitors.-> GQ & RQ
+    end
+
+    subgraph DataPlane["Polyglot Data Plane"]
+        MY[("MySQL Cluster<br/>ACID Financial Ledger<br/>Wallets & Gifts")]
+        MG[("MongoDB Cluster<br/>Document Store<br/>Chat & Audit Logs")]
+        RD[("Redis Cluster<br/>Distributed Redlock<br/>ZSET Leaderboards & Cache")]
+        S3[("AWS S3<br/>Static Assets & Media")]
+    end
+
+    LB --> AppNode
+    CONTROLLERS -->|Enqueue Background Jobs| GQ & RQ
+    LIB <--> MY & MG & RD & S3
+    GW -->|ACID Persistence & Balances| MY
+    GW -->|Sync User State & XP| RD
+    RW -->|Fanout Room Signaling| RD
+```
+
+### 2. Real-Time Fanout & Presence Architecture
+
+Handling interactive room interactions requires separating video delivery from state fanout:
+- **Video / Audio Ingest & SFU Distribution:** Delegated entirely to Agora's global edge network via WebRTC. The backend mints dynamic, cryptographically signed channel keys, keeping media transport off the application servers.
+- **In-Room Chat, Reactions & Signaling:** Orchestrated via Socket.IO backed by Redis Pub/Sub adapters. Each room corresponds to an isolated pub/sub channel.
+- **Presence Tracking:** Monitored using Redis in-memory sets with periodic heartbeat expiries, avoiding relational database lookups for user join/leave events.
 
 ---
 
 ## 🔬 Deep-Dive Engineering Challenges & Solutions
 
-### Challenge 1: Zero-Code vs. In-Process Telemetry Ingestion
+### Challenge 1: High-Concurrency Virtual Gifting & Financial Ledger
 
 #### Problem & Context
-Monitored enterprise fleets frequently run legacy applications or third-party proprietary services where injecting third-party npm/composer packages is prohibited by change-management policies or risks introducing runtime regressions.
+During peak live events or PK battles, hundreds of viewers send virtual gifts to a creator within seconds. Each gift transaction represents real currency:
+- The sender’s wallet must be debited.
+- The creator's balance must be credited.
+- Room-wide visual animations must be triggered immediately.
+- A double-spend or dropped record is a financial reconciliation incident.
 
-#### Engineering Approach & Trade-Off Matrix
-We designed a **hybrid dual-mode ingestion strategy**, enabling infrastructure teams to choose between zero-code passive log extraction and in-process middleware:
+#### Constraints
+- Direct relational database transactions (`BEGIN...COMMIT`) with row-level locks on sender and receiver wallet records cannot handle thousands of concurrent requests without thread pool exhaustion and lock timeouts.
+- In-memory-only updates risk balance loss if a node crashes before persisting to disk.
 
-| Parameter | Mode A: Passive Log Tailing (Zero-Code) | Mode B: In-Process Express Middleware |
-|---|---|---|
-| **Mechanism** | Tails `/var/log/nginx/access.log` using standard library Python/Bash regex. | 15-line Express response listener attached to `res.on('finish')`. |
-| **Code Changes** | **0 lines of application code modified**. | Requires importing middleware into application entry point. |
-| **Runtime Overhead** | 0% Node.js event-loop overhead; isolated to external exporter process. | Minor CPU cycle cost on each HTTP response cycle (<0.02ms). |
-| **Route Granularity** | Reads parameterized URLs directly from reverse proxy logs. | Captures Express route regex patterns (`/users/:id`). |
-| **Failure Isolation** | Exporter crash has **zero effect** on target application stability. | Exception in custom middleware could disrupt route handling. |
-
-> [!TIP]
-> **Implementation Secret: Zero-Code Microsecond Latency Extraction**  
-> By configuring NGINX's `log_format` to append `$request_time` (e.g., `'"$request" $status $body_bytes_sent $request_time'`), the passive Python exporter extracts exact millisecond upstream response latencies without touching Node.js or PHP code.
-
----
-
-### Challenge 2: Real-Time 60 FPS Graph Layout & Metric Edge Animation
-
-#### Problem & Context
-Rendering dynamic node graphs with 20+ services and 30+ interconnected metric edges updating every 3 seconds typically causes extreme DOM churn, layout thrashing, and high browser CPU utilization if graph layout calculations run on the main thread.
-
-#### Engineering Approach
-1. **Tiered Dagre-Style Constraint Layout:** Rather than relying on non-deterministic force-directed physics simulations, we implemented a deterministic tier-based coordinate mapper. Services are assigned fixed horizontal ranks based on architectural tiers (`client` to `external`), ensuring deterministic node positioning.
-2. **Decoupled State Slices:** Graph topology (nodes and static edges) is memoized via React 19 `useMemo`. Live telemetry updates (latency, RPM, error rates) mutate only lightweight edge labels and node status pills, avoiding full canvas re-layouts.
-3. **Hardware-Accelerated Edge Animation:** Animated metric flow dashes utilize native CSS keyframe animations and SVG stroke-dashoffset transitions rendered on the GPU compositing layer.
+#### Engineering Approach: Two-Phase Gifting Pipeline
+We engineered a decoupled, two-phase execution pipeline combining **in-memory distributed locking** with **asynchronous durable persistence**:
 
 ```
-+-----------------------------------------------------------------------------------+
-|                            GRAPH RENDERING PIPELINE                               |
-|                                                                                   |
-|  [ WebSocket Frame ] ---> [ Telemetry State Reducer ]                             |
-|                                     │                                             |
-|             ┌───────────────────────┴───────────────────────┐                     |
-|             ▼                                               ▼                     |
-|   { Memoized Topology }                          { Metric Edge Overlays }         |
-|   - Node IDs & Coordinates (Cached)              - Live RPM & Latency (Updated)   |
-|   - Tier Columns (client -> data)                - Stroke Color & Dash Rate (GPU) |
-|             │                                               │                     |
-|             └───────────────────────┬───────────────────────┘                     |
-|                                     ▼                                             |
-|                 [ React Flow Hardware Compositing Layer ]                         |
-|                           (Target: Steady 60 FPS)                                 |
-+-----------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+|                              TWO-PHASE VIRTUAL GIFTING PIPELINE                                  |
+|                                                                                                  |
+|   1. FAST PATH (Synchronous HTTP: ~25ms)                                                         |
+|   Client Request ──> Redlock (Sender ID) ──> Redis Balance Check ──> Redis Debit ──> Ack to User  |
+|                                                                    │                             |
+|                                                                    ▼                             |
+|                                                         Enqueue Persistence Job                  |
+|                                                                    │                             |
+|   2. DURABLE PATH (Asynchronous Worker: Bull Queue)                ▼                             |
+|   Worker ──> Idempotency Check (Trans ID) ──> MySQL REPEATABLE READ Transaction ──> Commit / Log |
+|                                                • INSERT gift_purchase_details                    |
+|                                                • INSERT wallet_history (audit)                   |
+|                                                • UPDATE balances (atomic inc)                    |
++--------------------------------------------------------------------------------------------------+
 ```
 
----
-
-### Challenge 3: High-Throughput Ingestion with SQLite WAL & Automated Compaction
-
-#### Problem & Context
-Monitored fleets emitting heartbeats every 3 seconds generate sustained write streams. Traditional relational database configurations (or SQLite default journal mode) suffer from database file lock contention (`SQLITE_BUSY`) when concurrent writes collide with incoming WebSocket client read queries.
-
-#### Engineering Approach
-1. **Write-Ahead Logging (WAL):** Initialized `PRAGMA journal_mode = WAL;` via Node.js native `DatabaseSync`. In WAL mode, SQLite allows concurrent readers to proceed uninterrupted while a writer appends to the `-wal` file.
-2. **Synchronous Optimization:** Applied `PRAGMA synchronous = NORMAL;`, ensuring write operations do not block on physical disk platter syncs on every commit while preserving full ACID integrity against application crashes.
-3. **Compound Index Optimization:** Created compound index `idx_frames_host_ts ON telemetry_frames (project_id, host_id, timestamp)` to ensure range queries and rollup jobs execute via fast B-tree seeks rather than table scans.
-4. **Lifecycle Rollup Compaction:** Implemented a rolling retention window (`rollupTelemetry(RAW_RETENTION_DAYS)`):
-   ```sql
-   -- Hourly Rollup Aggregation Pattern
-   INSERT OR REPLACE INTO telemetry_hourly (
-     project_id, host_id, hour, samples,
-     cpu_avg, cpu_max, ram_avg, ram_max, disk_avg, disk_max, load_avg
-   )
-   SELECT
-     project_id, host_id,
-     strftime('%Y-%m-%d %H:00:00', timestamp) AS hour,
-     COUNT(*) AS samples,
-     ROUND(AVG(json_extract(metrics_json, '$.cpu')), 2) AS cpu_avg,
-     MAX(json_extract(metrics_json, '$.cpu')) AS cpu_max,
-     ROUND(AVG(json_extract(metrics_json, '$.ram')), 2) AS ram_avg,
-     MAX(json_extract(metrics_json, '$.ram')) AS ram_max,
-     ROUND(AVG(json_extract(metrics_json, '$.disk')), 2) AS disk_avg,
-     MAX(json_extract(metrics_json, '$.disk')) AS disk_max,
-     ROUND(AVG(json_extract(metrics_json, '$.load')), 2) AS load_avg
-   FROM telemetry_frames
-   WHERE timestamp < ?
-   GROUP BY project_id, host_id, strftime('%Y-%m-%d %H:00:00', timestamp);
-   ```
+1. **Fast-Path Verification:** The API acquires a distributed lock (`Redlock`) on the sender's user ID in Redis. It verifies and decrements the user's cached wallet balance in memory, generates a unique `send_gift_trans_id`, and immediately pushes an asynchronous job to the Bull `giftQueue`.
+2. **Immediate Signaling:** The fast path triggers the room-wide Agora RTM animation signal, returning `200 OK` to the sender in under 30 ms.
+3. **Durable Persistence (Worker Plane):** The decoupled `giftWorker` picks up the job, validates the transaction ID against an idempotency table, opens a MySQL transaction (`REPEATABLE READ`), writes double-entry ledger records (`wallet_history`), and updates database balances using atomic increments (`UPDATE wallets SET balance = balance - X WHERE balance >= X`).
+4. **Outcome:** Absorbed massive gifting spikes during live battles without database lock contention, maintaining zero financial discrepancies across millions of transactions.
 
 ---
 
-### Challenge 4: Cascading Failure Detection & Heartbeat Liveness Engine
+### Challenge 2: Sub-Second Interactive Video Transport & Signaling
 
 #### Problem & Context
-In distributed microservices, a network partition or crashed host can cause false alarms across all dependent systems. If the central collector is unaware that an agent host has disconnected, it will either display stale metrics or falsely report that downstream APIs are healthy.
+Early live streaming architectures relied on HLS/RTMP protocols, which introduce $3$ to $8$ seconds of latency. In interactive live entertainment, high latency makes creator-viewer conversation impossible and breaks the psychology of live tipping.
 
-#### Engineering Approach
-We implemented an active **Liveness Monitor** operating on a 2-second interval:
-- **12-Second Deadman Threshold:** If no telemetry heartbeat arrives from a registered host for $> 12\text{ seconds}$ ($4\times$ the heartbeat cycle), the engine declares the host `offline`.
-- **Topological Cascade Isolation:**
-  - Services running directly on the offline host are marked **No Data (Gray)**.
-  - Inbound edges connecting to those services transition to zero RPM.
-  - Root-cause incident events are automatically inserted into the system event log with timestamps and host identifiers.
-  - The calculated state diff is broadcast immediately over WebSockets to all active operator sessions.
+#### Engineering Approach & Trade-Offs
+- **Decision:** Rather than engineering an in-house Selective Forwarding Unit (SFU) cluster—which requires substantial maintenance across global edge locations—we adopted **Agora WebRTC infrastructure for media transport**.
+- **Edge Token Minting:** The Node.js API acts as an authoritative gatekeeper, generating short-lived, role-based RTC tokens (`agora-access-token`) containing room permissions (broadcaster vs. audience).
+- **Dual-Channel Separation:** High-bandwidth media streams travel directly between clients and Agora edge nodes, while transactional and business logic passes through the Node.js API.
+- **Outcome:** Reduced end-to-end video latency to **$< 800\text{ ms}$ globally**, allowing instant real-time responses between creators and audiences.
 
 ---
 
-### Challenge 5: Constant-Time Cryptographic Auth & Multi-Tenant Isolation
+### Challenge 3: High-Velocity Leaderboards & Hot-Key Caching
 
 #### Problem & Context
-APM platforms are prime targets for lateral privilege escalation. Storing passwords in plaintext or using insecure cryptographic hashes exposes production operational infrastructure to credential theft and timing attacks.
+The platform features Daily, Monthly, Lifetime, and PK Battle leaderboards displaying top gift contributors and streamers. Querying `SUM(gift_value)` from relational tables for thousands of concurrent users brings relational databases to an immediate halt.
 
-#### Engineering Approach
-1. **`scrypt` Key Derivation:** All administrative credentials utilize Node.js native `crypto.scryptSync` with unique 16-byte cryptographically secure random salts (`crypto.randomBytes(16)`), outputting 64-byte key digests resistant to GPU/ASIC brute-force attacks.
-2. **Constant-Time Verification:** Password verification uses `crypto.timingSafeEqual` to eliminate timing side-channel attacks:
-   ```javascript
-   // Constant-time hash verification against side-channel leaks
-   export function verifyPassword(password, salt, hash) {
-     try {
-       const testHash = crypto.scryptSync(password, salt, 64).toString('hex');
-       return crypto.timingSafeEqual(
-         Buffer.from(testHash, 'hex'),
-         Buffer.from(hash, 'hex')
-       );
-     } catch {
-       return false;
-     }
-   }
-   ```
-3. **Role-Based Access Control (RBAC):**
-   - **Super Admin:** Full platform autonomy: provision projects, enroll remote hosts, modify topological definitions, export historical CSVs.
-   - **Workspace Admin:** Restricted project-level access: inspect real-time flow maps, observe live request streams, monitor host vitals within their assigned tenant.
+#### Engineering Approach: Redis Sorted Sets (ZSET)
+- **Data Structure:** Implemented leaderboards using Redis Sorted Sets (`ZSET`). Scores are updated in real time via atomic `ZINCRBY` operations as gifts are processed.
+- **Pagination via `ZREVRANGE`:** Retrieving the top 100 rankers runs in $O(\log(N) + M)$ time complexity, executing in $< 2\text{ ms}$.
+- **Write-Behind Synchronization:** Background workers periodically snapshot Redis rankings into MySQL archival tables for historical reporting, completely shielding the relational database from leaderboard read traffic.
+
+---
+
+### Challenge 4: Asynchronous Resilience & Data Reconciliation
+
+#### Problem & Context
+In any distributed architecture separating in-memory caches (Redis) from persistent storage (MySQL), unexpected worker crashes, network partitions, or unhandled exceptions can cause state drift between cached balances and the relational source of truth.
+
+#### Engineering Approach: Production Reconciliation Tooling
+Rather than assuming distributed transactions never fail, we engineered automated background reconciliation daemons (`scripts/` suite):
+
+```
++-------------------------------------------------------------------------------------------------+
+|                                 DATA RECONCILIATION SUITE                                       |
+|                                                                                                 |
+|   [ walletMissmatchCheck.js ]  ─── Compares Redis cached balances against SQL ledger sum        |
+|   [ walletSyncFromCache.js ]   ─── Resolves in-flight discrepancies with atomic balance locks   |
+|   [ leaderboardSync.js ]       ─── Rebuilds corrupted ZSET rankings from verified SQL audit logs|
+|   [ contributorListSync.js ]   ─── Recalculates top gift contributors post-network partitions   |
++-------------------------------------------------------------------------------------------------+
+```
+
+- **Safety Invariant:** MySQL is the permanent source of truth; Redis is an expendable accelerator.
+- **Scheduled Audit Sweeps:** Nightly reconciliation jobs audit total issued coins against consumed gifts and system balances, alerting engineering immediately to any mathematical anomalies.
+
+---
+
+### Challenge 5: Zero-Downtime Multi-Core Deployment on AWS
+
+#### Problem & Context
+Because live video streams run continuously around the clock across global time zones, there is no acceptable "maintenance window." Restarting the Node.js API server dropped active WebSocket connections, disrupting thousands of live broadcasts.
+
+#### Engineering Approach: PM2 Clustering + AWS CodeDeploy
+1. **Multi-Core Exploitation:** Configured PM2 cluster mode (`instances: 'max'`, `exec_mode: 'cluster'`) utilizing Node.js's cluster module to bind an instance to every available CPU core behind a shared IPC port.
+2. **Graceful Reloads:** Deployments utilize `pm2 reload ecosystem.config.js`, which restarts worker processes sequentially:
+   - Worker $N$ stops accepting new connections, drains existing HTTP requests within a 5-second grace period, and terminates.
+   - Worker $N+1$ boots and handles incoming traffic before the previous worker stops.
+3. **AWS CodeDeploy Lifecycle:** Automated lifecycle scripts (`appspec.yml`) manage package installation, environment variable decryption, asset compilation, and rolling reloads without taking the load balancer target group offline.
+
+---
+
+## 💸 The Virtual Gifting Pipeline (Sequence Deep-Dive)
+
+This sequence diagram illustrates the complete execution path of a high-value virtual gift transaction:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as Mobile Client
+    participant API as Gifts Controller
+    participant R as Redis (Cache & Redlock)
+    participant Q as Bull (giftQueue)
+    participant W as giftWorker
+    participant DB as MySQL (ACID Ledger)
+    participant RTM as Agora RTM / Socket.IO
+
+    App->>API: POST /api/v1/gift/send (gift_id, receiver_id, idempotency_key)
+    
+    rect rgb(240, 248, 255)
+        Note over API,R: Phase 1: Fast Path (In-Memory Validation & Debit)
+        API->>R: Acquire Redlock on sender_id (TTL: 3000ms)
+        API->>R: Validate cached wallet balance >= gift_cost
+        alt Insufficient Funds
+            API-->>App: 400 Bad Request ("Insufficient Coins")
+        else Balance Valid
+            API->>R: Decrement cached balance (atomic DECRBY)
+            API->>Q: Enqueue persistence job (trans_id, sender_id, receiver_id, gift_id)
+            API->>RTM: Broadcast gift animation event to room
+            API-->>App: 200 OK {"status": "success", "trans_id": "tx_9812"}
+        end
+        API->>R: Release Redlock on sender_id
+    end
+
+    rect rgb(255, 250, 240)
+        Note over Q,DB: Phase 2: Asynchronous Durable Persistence Path
+        Q->>W: Deliver job payload
+        W->>DB: Check idempotency (SELECT trans_id FROM gifts_purchase_details)
+        alt Already Persisted
+            W-->>Q: Acknowledge & terminate (duplicate job)
+        else First-Time Processing
+            W->>DB: BEGIN TRANSACTION (Isolation: REPEATABLE READ)
+            W->>DB: INSERT INTO gifts_purchase_details (...)
+            W->>DB: INSERT INTO wallet_history (sender debit audit record)
+            W->>DB: INSERT INTO wallet_history (receiver credit audit record)
+            W->>DB: UPDATE wallets SET balance = balance - cost WHERE user_id = sender
+            W->>DB: UPDATE wallets SET diamond_balance = diamond_balance + reward WHERE user_id = receiver
+            W->>DB: COMMIT TRANSACTION
+            W->>R: Atomic ZINCRBY on Daily & Monthly Leaderboards
+            W->>R: Increment User XP & Trigger Achievement Checks
+            W-->>Q: Acknowledge job completion
+        end
+    end
+```
 
 ---
 
 ## 🛠️ Technology Stack & Decision Matrix
 
-| Architectural Layer | Selected Technology | Alternative Considered | Technical Rationale & Trade-Off Analysis |
+| Architectural Layer | Production Technology | Evaluated Alternative | Architectural Rationale & Trade-Offs |
 |---|---|---|---|
-| **Frontend Framework** | **React 19** + **Vite** | Next.js / Angular | Zero SSR overhead needed for an authenticated internal dashboard; Vite delivers sub-second HMR and optimized production bundles. |
-| **Topology Engine** | **`@xyflow/react`** (v12) | D3.js / Cytoscape | Declarative node/edge component rendering, native support for custom DOM nodes, robust pan-zoom, and smooth SVG path calculations. |
-| **UI Design System** | **Ant Design v6** + **Lucide** | TailwindCSS / Material UI | Comprehensive suite of production-grade data tables, modals, split-drawers, metric pills, and tabbed operational panels out-of-the-box. |
-| **Backend Runtime** | **Node.js 20+ (ESM)** | Go / Python FastAPI | Native `DatabaseSync` SQLite integration, high-concurrency event loop for WebSocket broadcast, shared JavaScript data models across stack. |
-| **Real-Time Push** | **WebSockets (`ws`)** | Server-Sent Events (SSE) | Full bi-directional low-latency transport allowing client control signals (pause/resume stream) alongside server telemetry push. |
-| **Storage & Persistence**| **SQLite (WAL Mode)** | PostgreSQL / InfluxDB | Embedded footprint requiring zero external database administration, zero network latency on writes, and seamless multi-gigabyte WAL performance. |
-| **Host Exporter** | **Python 3 / Bash / Node** | Go binary / Rust agent | Python 3 and Bash are pre-installed on 99% of enterprise Linux hosts, enabling **zero-dependency deployment** without compiling binaries. |
-| **Process Management** | **PM2 (Cluster Mode)** | Docker / Systemd only | Built-in process clustering across CPU cores, zero-downtime hot reloads, automated memory threshold restarts, and log rotation. |
-| **Ingress & SSL** | **NGINX Reverse Proxy** | Caddy / Traefik | Production standard for high-concurrency WebSocket connection upgrades, TLS termination, and passive log-based telemetry generation. |
+| **API Runtime** | **Node.js (v18/v20) + Express** | Go (Gin) / Java (Spring) | Rapid feature velocity for 50+ domain controllers; non-blocking asynchronous event loop ideal for high-I/O signaling and third-party orchestration. |
+| **Media Transport** | **Agora RTC / RTM SDK** | Self-hosted WebRTC / Janus SFU | Offloads petabytes of global video bandwidth and multi-region SFU edge operations; allows engineering focus on proprietary monetization and engagement logic. |
+| **Relational Ledger** | **MySQL (InnoDB / Pool Booster)** | PostgreSQL | Proven ACID reliability for financial transactions; `mysql-pool-booster` delivers connection reuse under high worker thread concurrency. |
+| **Document Storage** | **MongoDB (Mongoose)** | Cassandra / DynamoDB | Schema flexibility for unstructured chat logs, complex nested user profiles, notification payloads, and system audit logs. |
+| **Cache & Distributed Locks** | **Redis + IORedis + Redlock** | Memcached | In-memory distributed locking primitives (`Redlock`), sub-millisecond Pub/Sub for room chat, and native Sorted Sets (`ZSET`) for instantaneous leaderboards. |
+| **Asynchronous Queues** | **Bull (Redis-backed)** | RabbitMQ / Kafka | Lightweight integration within the existing Redis cluster; provides job retry logic, delayed jobs, dead-letter queues, and web-based queue inspection (`Bull Board`). |
+| **Process Management** | **PM2 Cluster Mode** | Kubernetes / Docker Swarm | Maximum bare-metal multi-core CPU utilization on EC2 with minimal orchestration overhead; native support for zero-downtime rolling reloads. |
+| **Cloud Infrastructure** | **AWS (EC2, S3, SQS, CodeDeploy)** | Google Cloud / DigitalOcean | Mature enterprise ecosystem; seamless CodeDeploy integration with GitHub and private S3 buckets for secure media storage. |
+| **Push Notifications** | **Firebase Admin FCM** | OneSignal / APNs direct | Unified cross-platform push pipeline handling automatic token rotation, topic broadcasts, and offline message buffering. |
 
 ---
 
-## 🚀 Production Deployment & Infrastructure Topology
+## 📊 Observability & Production Operations
 
-### 1. Target Infrastructure Architecture (3-Server Fleet)
-
-A representative production multi-server infrastructure monitored by pulse APM:
+Observability in a real-time platform requires distributed tracing and proactive metrics:
 
 ```mermaid
 flowchart TD
-    subgraph TargetEnv["Production Fleet (Example Client Architecture)"]
-        subgraph Srv1["Server 1: Data & Cache Host (srv-data-01)"]
-            E1["pulse-exporter (Python / systemd)"]
-            M1[("MySQL :3306")]
-            R1[("Redis :6379")]
-            MG1[("MongoDB :27017")]
-        end
-
-        subgraph Srv2["Server 2: Node.js API Cluster (srv-api-01)"]
-            E2["pulse-exporter (Python / systemd)"]
-            NX["NGINX Proxy (:80/:443)"]
-            A1["Express API Instance 1 (:3000)"]
-            A2["Express API Instance 2 (:3001)"]
-            NX --> A1 & A2
-        end
-
-        subgraph Srv3["Server 3: Web / Admin Host (srv-admin-01)"]
-            E3["pulse-exporter (Python / systemd)"]
-            PHP["PHP-FPM Admin & CRM (:80)"]
-        end
+    subgraph Instrumentation["In-Process Telemetry"]
+        XRAY["AWS X-Ray SDK<br/>Distributed Request Tracing"]
+        PROM["express-prom-bundle<br/>Prometheus /metrics Endpoint"]
+        WINSTON["Rotating File Stream<br/>JSON Structured Logging"]
     end
 
-    subgraph CentralHost["Central APM Monitoring Host (apm.yourcompany.com)"]
-        NGX_CENTRAL["NGINX Reverse Proxy & SSL (:443)"]
-        STATIC_BUNDLE["React Production SPA (/var/www/dist)"]
-        NODE_BACKEND["Node.js Backend (:4000) (PM2)"]
-        SQLITE_DB[("pulse.db (WAL Mode)")]
-
-        NGX_CENTRAL -->|Route / | STATIC_BUNDLE
-        NGX_CENTRAL -->|Proxy /api/ | NODE_BACKEND
-        NGX_CENTRAL -->|Tunnel /ws | NODE_BACKEND
-        NODE_BACKEND <--> SQLITE_DB
+    subgraph Operations["Operations & Monitoring Center"]
+        GRAFANA["Prometheus / Grafana<br/>• HTTP Latency (p50, p95, p99)<br/>• Active Socket.IO Connections<br/>• Bull Queue Depth & Wait Time"]
+        AWS_XR["AWS X-Ray Console<br/>• Slow SQL Query Traces<br/>• Third-Party API Latencies (Agora, FCM)"]
+        ALERTING["PagerDuty / Slack Alerts<br/>• Queue lag > 5000 jobs<br/>• Error rate > 1.5%<br/>• Memory > 85%"]
     end
 
-    E1 --"Outbound HTTPS POST /api/ingest"--> NGX_CENTRAL
-    E2 --"Outbound HTTPS POST /api/ingest"--> NGX_CENTRAL
-    E3 --"Outbound HTTPS POST /api/ingest"--> NGX_CENTRAL
+    XRAY --> AWS_XR
+    PROM --> GRAFANA
+    GRAFANA --> ALERTING
 ```
+
+- **Distributed Tracing (AWS X-Ray):** Instruments HTTP requests, external calls to Google Play / Agora, and MySQL queries to detect latency outliers and slow transactions.
+- **System Metrics (Prometheus + Grafana):** Exposes Prometheus scrapers tracking active WebSocket counts, HTTP status code distributions, event loop lag, and Bull queue processing durations.
+- **Queue Diagnostics:** Implemented `@bull-board/express` behind administrative authorization to provide real-time visibility into active, completed, delayed, and failed queue jobs with manual retry capabilities.
 
 ---
 
-### 2. Central Portal Deployment (NGINX + PM2)
+## 📈 Measurable Scale, Performance & Business Impact
 
-#### Step 1: Production Bundle Build
-```bash
-# Install dependencies & compile frontend distribution
-npm install
-npm run build
-```
-
-#### Step 2: PM2 Backend Daemonization
-```bash
-# Launch central backend server in cluster mode with memory ceiling
-pm2 start server/index.js --name "pulse-backend" --max-memory-restart 500M
-pm2 save
-pm2 startup
-```
-
-#### Step 3: NGINX Reverse Proxy & WebSocket Configuration
-```nginx
-# /etc/nginx/sites-available/pulse-apm.conf
-server {
-    listen 80;
-    server_name apm.yourcompany.com;
-
-    # 1. Static Production Single Page Application
-    location / {
-        root /var/www/pulse-apm/dist;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-    }
-
-    # 2. Proxy REST API & Ingestion Gateway
-    location /api/ {
-        proxy_pass http://127.0.0.1:4000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # 3. Full-Duplex WebSocket Tunneling
-    location /ws {
-        proxy_pass http://127.0.0.1:4000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
-        proxy_set_header Host $host;
-        proxy_read_timeout 86400s;
-        proxy_send_timeout 86400s;
-    }
-}
-```
-
----
-
-### 3. Zero-Inbound Security Model
-
-```
-+---------------------------------------------------------------------------------+
-|                       FIREWALL PERIMETER SECURITY ARCHITECTURE                  |
-|                                                                                 |
-|   Target Host (Database / API)                     Central APM Server           |
-|  +---------------------------+                   +--------------------+         |
-|  | Inbound Ports: ALL CLOSED |                   | Inbound: 443 (TLS) |         |
-|  |                           |  Outbound HTTPS   |                    |         |
-|  | pulse_exporter.py         | ═════════════════>| NGINX -> Node API  |         |
-|  +---------------------------+   (Port 443 Only) +--------------------+         |
-|                                                                                 |
-|  [ADVANTAGE]: Security teams do NOT need to open any incoming network rules    |
-|               on production database or application nodes!                      |
-+---------------------------------------------------------------------------------+
-```
-
-Target servers require **zero inbound listening ports** to be exposed to the monitoring server. By reversing the traditional collector pattern (push instead of pull), target hosts operate behind strict NAT and private subnets, streaming heartbeats out over standard outbound HTTPS.
-
----
-
-## 📊 Reliability, SLA Benchmarks & Failure Modes
-
-### Benchmarking Telemetry Under Operational Conditions
-
-| Operational Metric | Measured Performance | Verification Condition |
+| Operational Dimension | Measured Result | Verification Context |
 |---|---|---|
-| **Heartbeat Frequency** | $3.0\text{ seconds}$ per host | Configurable via `PULSE_INTERVAL` environment variable. |
-| **Ingest Ingestion Latency** | $< 4.5\text{ ms}$ per POST | Measured at central Node.js gateway (SQLite WAL append). |
-| **WebSocket Broadcast Lag** | $< 25\text{ ms}$ fanout latency | From ingest write to connected client socket receipt. |
-| **Browser Frame Rate** | Constant $60\text{ FPS}$ | Profiled during continuous 3s graph updates with 20 nodes. |
-| **Liveness Incident Trigger** | Exactly $12.0\text{ seconds}$ | Deadman timeout automatically isolating dropped hosts. |
-| **Exporter Host Overhead** | $< 0.4\%\text{ CPU}$, $\approx 18\text{ MB RAM}$ | Profiled on Ubuntu 22.04 LTS (Python 3 daemon). |
-
-### System Behavior Across Failure Modes
-
-```
-+----------------------------------+-------------------------------------------------------------+
-| FAILURE SCENARIO                 | SYSTEM RESPONSE & MITIGATION STRATEGY                       |
-+----------------------------------+-------------------------------------------------------------+
-| Target Host Power Outage         | Liveness engine detects missing heartbeat after 12s;        |
-|                                  | flags host offline, turns hosted nodes gray, logs incident. |
-+----------------------------------+-------------------------------------------------------------+
-| Database Crash (e.g., MySQL)     | Local exporter TCP probe fails; reports healthy: false.     |
-|                                  | Only the MySQL node and incoming edges turn red on Flow Map.|
-+----------------------------------+-------------------------------------------------------------+
-| Transient Network Partition      | Exporter buffers telemetry locally; reconnects with backoff;|
-|                                  | central portal marks host offline until traffic resumes.    |
-+----------------------------------+-------------------------------------------------------------+
-| Central Portal Crash / Restart   | PM2 restarts backend in < 1s; SQLite WAL recovers cleanly;  |
-|                                  | exporters retry outbound POST requests automatically.       |
-+----------------------------------+-------------------------------------------------------------+
-```
+| **Cumulative Revenue** | **$20,000,000+** | Total gross virtual gift purchases and in-app transactions processed across platform lifecycle. |
+| **User Base** | **100,000+ MAU** | Monthly active users interacting across live broadcast streams, PK competitions, and social feeds. |
+| **End-to-End Video Latency** | **< 800 ms** | Sub-second interactive latency achieved globally via Agora WebRTC edge transport. |
+| **API Response Time** | **< 35 ms (p95)** | Core HTTP endpoints served through Redis caching and optimized connection pooling. |
+| **Gift Processing Throughput** | **1,500+ gifts/sec** | Sustained throughput during live PK battles without database lock contention. |
+| **Financial Accuracy** | **100.0%** | Zero balance leakage or unresolved double-spend incidents through automated nightly reconciliation. |
 
 ---
 
-## 💡 Key Engineering Takeaways & Lessons Learned
+## 💡 Engineering Trade-Offs & Lessons Learned
 
-1. **Passive Log Tailing Outperforms Heavy Agent Instrumentation:**  
-   Extracting latency and status code distributions from NGINX access logs delivers $95\%$ of the observability value of complex in-process APM bytecode agents with $0\%$ of the application stability risk.
-2. **Topological Context Prevents Alert Fatigue:**  
-   When a foundational database fails, alerting on every downstream API timeout overwhelms operations teams. Visualizing dependency flow maps allows engineers to immediately differentiate root causes from downstream symptoms.
-3. **Outbound-Only Ingestion Simplifies Enterprise Adoption:**  
-   Designing telemetry systems around outbound HTTPS pushes rather than inbound scraping (e.g., Prometheus pull) eliminates weeks of security review and firewall negotiations with corporate SecOps teams.
-4. **SQLite WAL is a High-Throughput Powerhouse:**  
-   For self-contained monitoring appliances, SQLite operating in WAL mode with compound indexes easily handles millions of daily metrics frames without the operational burden of managing external database servers.
+### 1. Buy Commodity Transport, Build Differentiating Value
+Attempting to build, scale, and maintain a proprietary global WebRTC SFU network consumes massive engineering resources. Adopting Agora for video distribution allowed a focused team to concentrate engineering horsepower on where the business actually wins: real-time monetization, low-latency signaling, gamification, and retention mechanics.
+
+### 2. Latency Budgets are Architecture Budgets
+In interactive live streaming, latency cannot be optimized after the fact. Every architectural layer—from middleware parsing and token validation to Redis lookups—must be allocated a strict millisecond budget. Expensive operations (achievements, database ledger writes, push notifications) must be pushed out of the synchronous request lifecycle.
+
+### 3. Financial Systems Require Defense-in-Depth
+In-memory caching is indispensable for speed, but relational ACID databases remain non-negotiable for financial durability. Decoupling the fast-path user acknowledgement from the durable persistence worker via idempotent Bull queues provided the optimal balance between high performance and financial integrity.
+
+### 4. Automated Reconciliation is Not Optional
+State drift across distributed caches and databases is inevitable under extreme scale, network blips, or unhandled process crashes. Designing reconciliation scripts and audit integrity checkers early in the platform lifecycle prevented small data discrepancies from ballooning into customer support crises.
 
 ---
 
 ## 🔮 Future Architectural Roadmap
 
-- [ ] **OpenTelemetry (OTel) Collector Ingestion Gateway:** Implement an OTLP-compliant gRPC/HTTP endpoint allowing native OpenTelemetry traces to flow directly into the topological graph.
-- [ ] **Automated Anomaly Detection via Dynamic Baselines:** Transition from static threshold rules (e.g., $\ge 400\text{ ms}$) to dynamic percentile baselines ($p95$, $p99$) calculated over rolling 7-day seasonal windows.
-- [ ] **Distributed eBPF Network Probing:** Package an optional eBPF kernel exporter to measure socket-level TCP retransmissions, SYN packet drops, and kernel-level connection latencies with zero user-space overhead.
-- [ ] **Multi-Region Cross-Cluster Federation:** Support hierarchical hub-and-spoke federation where regional APM nodes aggregate local telemetry and synchronize state to a central global pane.
+- [ ] **Event-Driven Migration to Apache Kafka:** Transitioning from Redis-backed Bull queues to distributed Kafka event logs to support multi-million event replayability and unified event-sourcing.
+- [ ] **Automated AI-Assisted Live Moderation:** Integrating multimodal computer vision models directly into video ingest webhooks to flag inappropriate content within seconds of broadcast.
+- [ ] **Global Read Replicas for Polyglot Persistence:** Deploying geographically distributed Aurora MySQL and Redis read replicas to reduce leaderboard and explore feed latency for international user cohorts.
 
 ---
 
-## 👨‍💻 Author & Technical Profile
+## 👨‍💻 Author & Technical Leadership
 
 **Biswajit Chowdhury**  
-*Senior Software Architect & Full-Stack Systems Engineer*
+*Senior Software Architect & Lead Backend Systems Engineer*
 
-Specializing in real-time distributed systems, high-concurrency Node.js architectures, telemetry and observability engines, and production cloud infrastructure.
+Specializing in scalable distributed systems, high-concurrency Node.js architectures, real-time media and signaling platforms, and financial-grade transactional systems.
 
 - **GitHub:** [@bchowdhury24](https://github.com/bchowdhury24)
-- **Portfolio Case Study Repository:** [case-study-live-streaming](https://github.com/bchowdhury24/case-study-live-streaming)
+- **Case Study Repository:** [case-study-live-streaming](https://github.com/bchowdhury24/case-study-live-streaming)
 
 ---
 
 <div align="center">
-<sub>Designed, architected, and engineered with precision. Built for high-reliability production operations.</sub>
+<sub>Designed, architected, and engineered with precision. Built for high-concurrency, real-time production scale.</sub>
 </div>

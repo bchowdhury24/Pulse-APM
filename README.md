@@ -569,7 +569,7 @@ Target servers require **zero inbound listening ports** to be exposed to the mon
 Specializing in real-time distributed systems, high-concurrency Node.js architectures, telemetry and observability engines, and production cloud infrastructure.
 
 - **GitHub:** [@bchowdhury24](https://github.com/bchowdhury24)
-- **Portfolio Repository:** [serverV2](https://github.com/bchowdhury24)
+- **Portfolio :** [serverV2](https://server.klapify.com/)
 
 ---
 
